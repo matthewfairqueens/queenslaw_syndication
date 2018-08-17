@@ -1,0 +1,4 @@
+<?php
+function queenslaw_syndication_uninstall() {
+  \Drupal::configFactory()->getEditable('queenslaw_syndication.settings')->delete();
+}

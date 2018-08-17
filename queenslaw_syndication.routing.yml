@@ -1,0 +1,7 @@
+queenslaw_syndication.admin:
+  path: '/admin/config/services/queenslaw-syndication'
+  defaults:
+    _form: 'Drupal\queenslaw_syndication\Form\QueensLawSyndicationAdminForm'
+    _title: "Queen's Law Syndication Settings"
+  requirements:
+    _permission: 'manage queenslaw_syndication'

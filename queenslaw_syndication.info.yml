@@ -1,0 +1,8 @@
+name: "Queen's University Faculty of Law Syndication"
+description: "Syndication functionality for Queen's University Faculty of Law websites."
+package: "Queen's University Faculty of Law"
+type: module
+core: 8.x
+configure: queenslaw_syndication.admin
+dependencies:
+  - color_field

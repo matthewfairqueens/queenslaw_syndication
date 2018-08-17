@@ -1,0 +1,5 @@
+queenslaw_syndication.admin:
+  title: "Queen's Law syndication"
+  description: "Manage Queen's Law syndication settings"
+  parent: system.admin_config_services
+  route_name: queenslaw_syndication.admin

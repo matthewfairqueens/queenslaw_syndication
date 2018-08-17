@@ -1,0 +1,4 @@
+queenslaw_syndication:
+  css:
+    theme:
+      ../../contrib/color_field/css/color_field_formatter_swatch.css: {}

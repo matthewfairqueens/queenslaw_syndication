@@ -1,0 +1,147 @@
+<?php
+
+use Drupal\Component\Utility\Html;
+use Drupal\Core\Render\Markup;
+
+function queenslaw_syndication_theme($existing, $type, $theme, $path) {
+  return [
+    'queenslaw_syndication_person' => [
+      'variables' => [
+        'markup' => NULL,
+      ],
+    ],
+  ];
+}
+
+function _queenslaw_syndication_block_content($uuid) {
+  $content = [];
+  if ($base_url = \Drupal::config('queenslaw_syndication.settings')->get('base_url')) {
+    $stream_context = _queenslaw_syndication_stream_context();
+    if ($json = file_get_contents("{$base_url}/block_content/uuid:{$uuid}", FALSE, $stream_context)) {
+      if ($data = json_decode($json, TRUE)) {
+        if ($item = array_shift($data)) {
+          if (isset($item['content'])) $content['markup'] = $item['content'];
+          if (isset($item['label'])) {
+            $id = Html::getID($item['label']);
+            // strip hyphens to emulate the default generated block id
+            $content['base_class'] = str_replace('-', '', $id);
+          }
+        }
+      }
+    }
+  }
+  return $content;
+}
+
+function _queenslaw_syndication_notifications_content() {
+  $content = [
+    'base_class' => 'queenslaw-notifications'
+  ];
+  if ($base_url = \Drupal::config('queenslaw_syndication.settings')->get('base_url')) {
+    $url = "{$base_url}-view/notification";
+    $source_site_url_parts = parse_url($base_url);
+    $source_site_url = $source_site_url_parts['scheme'] . '://' . $source_site_url_parts['host'];
+    $stream_context = _queenslaw_syndication_stream_context();
+    if ($json = file_get_contents($url, FALSE, $stream_context)) {
+      if ($data = json_decode($json, TRUE)) {
+        foreach ($data as $item) {
+          $markup = [];
+          foreach ($item as $field => $value) {
+            if ($value) {
+              if ($field == 'title') $container = 'h3';
+              else $container = 'div';
+              // there doesn't appear to be any way of forcing links to be absolute in the
+              // REST export, so do it manually
+              $value = str_replace('href="/', "href=\"{$source_site_url}/", $value);
+              $markup[$field] = "<{$container} class=\"field-{$field}\">{$value}</{$container}>";
+            }
+          }
+          if (!empty($markup)) {
+            if (!isset($content['markup'])) $content['markup'] = '';
+            $content['markup'] .= '<div class="queenslaw-notification"><article>' . implode(' ', $markup) . '</article></div>';
+          }
+        }
+      }
+    }
+  }
+  return $content;
+}
+
+function _queenslaw_syndication_people_content($display, $tids) {
+  $content = [
+    'base_class' => 'queenslaw-people'
+  ];
+  if ($base_url = \Drupal::config('queenslaw_syndication.settings')->get('base_url')) {
+    $url = "{$base_url}/person/display:{$display};tids:{$tids}";
+    $stream_context = _queenslaw_syndication_stream_context();
+    if ($json = file_get_contents($url, FALSE, $stream_context)) {
+      if ($data = json_decode($json, TRUE)) {
+        foreach ($data as $item) {
+          if (isset($item['content']) && ($item['content'] != '')) {
+            if (!isset($content['markup'])) $content['markup'] = '';
+            $content['markup'] .= "<div class=\"queenslaw-person\">{$item['content']}</div>";
+          }
+        }
+      }
+    }
+  }
+  return $content;
+}
+
+function _queenslaw_syndication_people($instructor = FALSE) {
+  $people = [];
+  if ($base_url = \Drupal::config('queenslaw_syndication.settings')->get('base_url')) {
+    $url = "{$base_url}-view/person";
+    if ($instructor) $url .= '/instructor';
+    $stream_context = _queenslaw_syndication_stream_context();
+    if ($json = file_get_contents($url, FALSE, $stream_context)) {
+      if ($data = json_decode($json, TRUE)) {
+        foreach ($data as $item) {
+          if (isset($item['uuid']) && ($item['uuid'] != '') && (isset($item['title'])) && ($item['title'] != '')) {
+            $uuid = $item['uuid'];
+            $people[$uuid] = $item['title'];
+          }
+        }
+        if ($item = array_shift($data)) {
+          if (isset($item['content'])) $markup = $item['content'];
+        }
+      }
+    }
+  }
+  return $people;
+}
+
+function _queenslaw_syndication_person_display($uuid, $display_type = 'name') {
+  $markup = '';
+  if ($base_url = \Drupal::config('queenslaw_syndication.settings')->get('base_url')) {
+    $stream_context = _queenslaw_syndication_stream_context();
+    if ($json = file_get_contents("{$base_url}/person/uuid:{$uuid}", FALSE, $stream_context)) {
+      if ($data = json_decode($json, TRUE)) {
+        if ($item = array_shift($data)) {
+          if ($display_type == 'full') {
+            if (isset($item['content'])) $markup .= $item['content'];
+// ***** links back to people are disabled until the main site launches
+//            if (isset($item['read_more'])) $markup .= Markup::create('<p>' . $item['read_more'] . '</p>');
+          }
+          elseif (isset($item['linked_title'])) $markup = $item['linked_title'];
+        }
+      }
+    }
+  }
+  return $markup;
+}
+
+function _queenslaw_syndication_stream_context() {
+  $stream_context = NULL;
+  if (($username = \Drupal::config('queenslaw_syndication.settings')->get('username')) && ($username) && ($password = \Drupal::config('queenslaw_syndication.settings')->get('password')) && ($password)) {
+    $credentials = base64_encode("{$username}:{$password}");
+    $stream_options = [
+      'http'=> [
+        'method' => 'GET',
+        'header' => "Authorization: Basic {$credentials}",
+      ],
+    ];
+    $stream_context = stream_context_create($stream_options);
+  }
+  return $stream_context;
+}

@@ -1,0 +1,16 @@
+{
+  "name": "drupal/queenslaw_syndication",
+  "description": "Syndication functionality for Queen's University Faculty of Law websites.",
+  "type": "drupal-custom-module",
+  "homepage": "http://law.queensu.ca/",
+  "authors": [
+    {
+      "name": "Noah St. Amand",
+      "email": "noah@purelyinteractive.ca",
+      "role": "Maintainer"
+    }
+  ],
+  "license": "GPL-2.0+",
+  "minimum-stability": "dev",
+  "require": { }
+}
