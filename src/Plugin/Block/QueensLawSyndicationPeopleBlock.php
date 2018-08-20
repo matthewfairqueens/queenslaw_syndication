@@ -64,11 +64,9 @@ class QueensLawSyndicationPeopleBlock extends BlockBase implements BlockPluginIn
       if (isset($content['markup'])) {
         // using "children" here instead of "markup" preserves the inline styles used by
         // the Color Field module; ref. https://drupal.stackexchange.com/questions/184963/pass-raw-html-to-markup
-        $return = [
-          '#children' => $content['markup'],
-          '#attached' => [
-            'library' => ['queenslaw_syndication/queenslaw_syndication'],
-          ],
+        $return['#children'] = $content['markup'];
+        $return['#attached'] = [
+          'library' => ['queenslaw_syndication/queenslaw_syndication'],
         ];
         if (isset($content['base_class'])) {
           $return['#attributes'] = [

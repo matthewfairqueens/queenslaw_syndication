@@ -28,9 +28,7 @@ class QueensLawSyndicationNotificationBlock extends BlockBase {
     ];
     if ($content = _queenslaw_syndication_notifications_content()) {
       if (isset($content['markup'])) {
-        $return = [
-          '#children' => $content['markup'],
-        ];
+        $return['#children'] = $content['markup'];
         if (isset($content['base_class'])) {
           $return['#attributes'] = [
             'class' => [
