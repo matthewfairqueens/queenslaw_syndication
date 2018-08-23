@@ -120,8 +120,7 @@ function _queenslaw_syndication_person_display($uuid, $display_type = 'name') {
         if ($item = array_shift($data)) {
           if ($display_type == 'full') {
             if (isset($item['content'])) $markup .= $item['content'];
-// ***** links back to people are disabled until the main site launches
-//            if (isset($item['read_more'])) $markup .= Markup::create('<p>' . $item['read_more'] . '</p>');
+            if (isset($item['read_more'])) $markup .= Markup::create('<p>' . $item['read_more'] . '</p>');
           }
           elseif (isset($item['linked_title'])) $markup = $item['linked_title'];
         }
