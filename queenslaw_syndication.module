@@ -1,5 +1,6 @@
 <?php
 
+use Drupal\block\Entity\Block;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Render\Markup;
 
@@ -11,6 +12,18 @@ function queenslaw_syndication_theme($existing, $type, $theme, $path) {
       ],
     ],
   ];
+}
+
+/**
+ * Implements template_preprocess_html().
+ *
+ * Add a body class if the syndicated event block exists.
+ */
+function queenslaw_syndication_preprocess_html(&$variables) {
+  $blocks = \Drupal::entityTypeManager()->getStorage('block')->loadByProperties(['plugin' => 'queenslaw_syndication_events']);
+  foreach ($blocks as $block) {
+    if (($block) && ($block->access('view'))) $variables['attributes']['class'][] = 'queenslaw-syndicated-events';
+  }
 }
 
 function _queenslaw_syndication_block_content($uuid) {
@@ -102,9 +115,6 @@ function _queenslaw_syndication_people($instructor = FALSE) {
             $people[$uuid] = $item['title'];
           }
         }
-        if ($item = array_shift($data)) {
-          if (isset($item['content'])) $markup = $item['content'];
-        }
       }
     }
   }
@@ -128,6 +138,47 @@ function _queenslaw_syndication_person_display($uuid, $display_type = 'name') {
     }
   }
   return $markup;
+}
+
+function _queenslaw_syndication_event_types() {
+  $event_types = [];
+  if ($base_url = \Drupal::config('queenslaw_syndication.settings')->get('base_url')) {
+    $url = "{$base_url}-view/event-types";
+    $stream_context = _queenslaw_syndication_stream_context();
+    if ($json = file_get_contents($url, FALSE, $stream_context)) {
+      if ($data = json_decode($json, TRUE)) {
+        foreach ($data as $item) {
+          if (isset($item['tid']) && ($item['tid'] != '') && (isset($item['name'])) && ($item['name'] != '')) {
+            $tid = $item['tid'];
+            $event_types[$tid] = $item['name'];
+          }
+        }
+      }
+    }
+  }
+  return $event_types;
+}
+
+function _queenslaw_syndication_event_block_content($event_types, $count) {
+  $content = [
+    'base_class' => 'queenslaw-events'
+  ];
+  $event_types = array_filter($event_types);
+  if (($event_types) && ($base_url = \Drupal::config('queenslaw_syndication.settings')->get('base_url'))) {
+    $event_types_string = implode('+', $event_types);
+    $stream_context = _queenslaw_syndication_stream_context();
+    if ($json = file_get_contents("{$base_url}/event/tid:{$event_types_string};count:{$count}", FALSE, $stream_context)) {
+      if ($data = json_decode($json, TRUE)) {
+        foreach ($data as $item) {
+          if (isset($item['content']) && ($item['content'] != '')) {
+            if (!isset($content['markup'])) $content['markup'] = '';
+            $content['markup'] .= "<div class=\"queenslaw-event\">{$item['content']}</div>";
+          }
+        }
+      }
+    }
+  }
+  return $content;
 }
 
 function _queenslaw_syndication_stream_context() {
